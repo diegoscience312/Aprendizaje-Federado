@@ -1,0 +1,141 @@
+Aprendizaje Federado con MNIST
+Este repositorio contiene la implementación de un sistema de aprendizaje federado utilizando la base de datos MNIST y TensorFlow, como parte de una actividad académica para el curso de Cloud Computing.
+Contenido del Repositorio
+
+model.py: Implementación del modelo CNN para reconocimiento de dígitos MNIST.
+local_training.ipynb: Notebook para entrenamiento local del modelo.
+global_aggregation.py: Script para agregar modelos entrenados localmente mediante tres métodos diferentes.
+ensayo_aprendizaje_federado.md: Análisis de los resultados obtenidos.
+
+Descripción del Proyecto
+El aprendizaje federado es una técnica de aprendizaje automático donde el modelo se entrena de forma descentralizada en múltiples dispositivos o servidores que mantienen los datos localmente, sin intercambiarlos. Este enfoque preserva la privacidad de los datos y reduce la necesidad de transmitir grandes cantidades de información.
+En este proyecto:
+
+Dividimos la base de datos MNIST entre varios "clientes" (miembros del equipo).
+Cada cliente entrena el mismo modelo con sus datos locales.
+Los pesos de los modelos entrenados localmente se agregan para formar un modelo global.
+Comparamos tres métodos diferentes de agregación: FedAvg, FedProx y FedMed.
+
+Prerrequisitos
+tensorflow>=2.4.0
+numpy>=1.19.2
+matplotlib>=3.3.2
+scikit-learn>=0.23.2
+seaborn>=0.11.0
+pickle
+Guía de Implementación
+Paso 1: Preparación del Entorno
+
+Clonar este repositorio:
+git clone https://github.com/tu-usuario/tu-repositorio.git
+cd tu-repositorio
+
+Instalar las dependencias necesarias:
+pip install tensorflow numpy matplotlib scikit-learn seaborn
+
+
+Paso 2: División de Datos (Fuera del Repositorio)
+Por razones de confidencialidad, la división de datos se realiza fuera del repositorio público. Cada miembro del equipo debe:
+
+Descargar la base de datos MNIST usando TensorFlow:
+pythonimport tensorflow as tf
+(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+
+Normalizar los datos (valores entre 0 y 1) y añadir dimensión de canal:
+pythonx_train = x_train.astype('float32') / 255.0
+x_test = x_test.astype('float32') / 255.0
+x_train = x_train.reshape(x_train.shape[0], 28, 28, 1)
+x_test = x_test.reshape(x_test.shape[0], 28, 28, 1)
+
+Dividir los datos de entrenamiento en partes estadísticamente equivalentes (una por miembro del equipo).
+
+Paso 3: Entrenamiento Local
+Cada miembro del equipo debe:
+
+Abrir local_training.ipynb y establecer su ID de cliente:
+pythonCLIENT_ID = N  # Donde N es un número único asignado a cada miembro (1, 2, 3, ...)
+
+Cargar sus datos asignados.
+Ejecutar todo el notebook para entrenar el modelo localmente.
+El notebook generará:
+
+Un modelo local guardado como modelo_local_cliente_N.h5
+Los pesos del modelo en formato pickle como pesos_cliente_N.pkl
+Curvas de aprendizaje y matrices de confusión para análisis visual
+
+
+
+Paso 4: Agregación Global
+Una vez que todos los miembros han entrenado sus modelos localmente:
+
+Recopilar todos los archivos de pesos (pesos_cliente_N.pkl) en un mismo directorio.
+Ejecutar el script de agregación global:
+python global_aggregation.py
+
+El script implementará tres métodos de agregación:
+
+FedAvg: Promedio federado simple de pesos
+FedProx: Promedio federado con término de regularización
+FedMed: Mediana federada para mayor robustez
+
+
+Se evaluará cada método y se generará:
+
+Modelos globales para cada método (modelo_global_fedavg.h5, etc.)
+Un gráfico comparativo de precisión (comparacion_metodos.png)
+Identificación del mejor método de agregación
+
+
+
+Paso 5: Análisis de Resultados
+Analizar los resultados obtenidos y completar el ensayo en ensayo_aprendizaje_federado.md, explicando:
+
+Qué método de agregación obtuvo mejores resultados
+Por qué este método funcionó mejor que los otros
+Factores que influyeron en el rendimiento de cada método
+
+Arquitectura del Modelo
+El modelo utilizado es una Red Neuronal Convolucional (CNN) diseñada para el reconocimiento de dígitos manuscritos:
+Model: "sequential"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ conv2d (Conv2D)             (32, 28, 28, 32)          320       
+                                                                 
+ max_pooling2d (MaxPooling2D)  (32, 14, 14, 32)        0         
+                                                                 
+ conv2d_1 (Conv2D)           (32, 14, 14, 64)         18496      
+                                                                 
+ max_pooling2d_1 (MaxPooling2  (32, 7, 7, 64)         0         
+ D)                                                              
+                                                                 
+ conv2d_2 (Conv2D)           (32, 7, 7, 128)          73856      
+                                                                 
+ max_pooling2d_2 (MaxPooling2  (32, 3, 3, 128)        0         
+ D)                                                              
+                                                                 
+ flatten (Flatten)           (32, 1152)                0         
+                                                                 
+ dense (Dense)               (32, 256)                 295168     
+                                                                 
+ dropout (Dropout)           (32, 256)                 0         
+                                                                 
+ dense_1 (Dense)             (32, 10)                  2570      
+                                                                 
+=================================================================
+Total params: 390410
+Trainable params: 390410
+Non-trainable params: 0
+_________________________________________________________________
+Métodos de Agregación
+FedAvg (Federated Averaging)
+Método original propuesto por Google que promedia los pesos de todos los modelos locales para crear un modelo global.
+FedProx
+Extensión de FedAvg que añade un término de regularización para limitar la heterogeneidad entre modelos locales, mejorando la convergencia cuando los datos están distribuidos de manera no uniforme.
+FedMed (Federated Median)
+En lugar de usar el promedio, calcula la mediana para cada parámetro, siendo más robusto contra valores atípicos o clientes potencialmente maliciosos.
+Notas Importantes
+
+Los datos originales MNIST y su división no están incluidos en este repositorio por razones de confidencialidad.
+Para replicar este proyecto, cada miembro debe realizar la división de datos localmente.
+El conjunto de datos de prueba debe ser el mismo para todos los clientes para garantizar una evaluación justa.
